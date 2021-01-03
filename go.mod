@@ -11,4 +11,5 @@ require (
 	github.com/micmonay/keybd_event v1.1.0
 	github.com/miekg/dns v1.1.35
 	github.com/stretchr/testify v1.6.1
+	github.com/tomnomnom/rawhttp v0.0.0-20200527083831-e904eb0f15db
 )

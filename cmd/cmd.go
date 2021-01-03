@@ -18,6 +18,7 @@ func Init() {
 	// shell := ishell.New()
 	// Load(shell)
 	InitDNS()
+	InitHTTP()
 	InitTest()
 
 	// display info.
