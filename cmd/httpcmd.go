@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	ishell "gosploit/ishell"
 	. "gosploit/termcolor"
 	"log"
+	"os"
 	"regexp"
 	"strings"
 
@@ -46,7 +48,8 @@ func InitHTTP() {
 		Name: mName + "." + "test",
 		Help: "Set/Get URL (http.url [URL])", // args need to be specified in help using [] so autohelp can spot them.
 		Func: func(c *ishell.Context) {
-			testreq()
+			a := parseFile("/tmp/test.req")
+			fmt.Println(a)
 
 		},
 	})
@@ -99,6 +102,61 @@ func InitHTTP() {
 			c.Println("")
 		},
 	})
+}
+
+func parseFile(path string) rawhttp.Request {
+	req := rawhttp.Request{}
+	file, err := os.Open(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	ln := 0
+	for scanner.Scan() {
+		// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< may be able to split on double newline  headers[0] \n\n body[1:]  read all with (1:) for multipart, may need to join with \n\n
+		ln++
+		if ln == 1 { // first line
+			ar := strings.Split(scanner.Text(), " ")
+			req.Method = ar[0]
+
+			pq := strings.Split(ar[1], "?")
+			req.Path = pq[0]
+			req.Query = pq[1]
+			req.Proto = ar[2]
+
+		}
+		curln := scanner.Text()
+		if strings.Contains(curln, "Host:") { //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< may be able to just append each line to []Headers and let it deal with it.
+			req.Hostname = strings.Split(curln, "Host: ")[1]
+			fmt.Println(req.Hostname)
+		}
+		// fmt.Println(scanner.Text())
+		//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< need to prompt for port/scheme
+	}
+	// fmt.Println(req.String())
+	// if err := scanner.Err(); err != nil {
+	// 	log.Fatal(err)
+	// }
+	//
+	// req.Port = "80"
+	// // req.Fragment = "anchor"
+	// req.EOL = "\r\n"
+	// req.AutoSetContentLength()
+	//
+	// resp, err := rawhttp.Do(req)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	//
+	// fmt.Printf("< %s\n", resp.StatusLine())
+	// for _, h := range resp.Headers() {
+	// 	fmt.Printf("< %s\n", h)
+	// }
+	//
+	// fmt.Printf("\n%s\n", resp.Body())
+	return req
 }
 
 func testreq() {
